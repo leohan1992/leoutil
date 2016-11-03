@@ -1,0 +1,48 @@
+apply plugin: 'com.android.library'
+apply plugin: 'com.novoda.bintray-release'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.3"
+
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+    }
+    lintOptions {
+        abortOnError false
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile 'com.squareup.okhttp3:okhttp:3.2.0'
+    compile 'com.alibaba:fastjson:1.2.11'
+    compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.3'
+    //    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+    //        exclude group: 'com.android.support', module: 'support-annotations'
+    //    })
+    //    compile 'com.android.support:appcompat-v7:23.4.0'
+    //    testCompile 'junit:junit:4.12'
+    compile files('libs/AndroidSwipeLayout-v1.1.8.jar')
+}
+publish {
+    userOrg = 'leohan'//bintray.com用户名
+    groupId = 'xyz.leohan'//jcenter上的路径
+    artifactId = 'leoutil'//项目名称
+    publishVersion = '1.0.0'//版本号
+    desc = 'A few commen util for use'//描述，不重要
+    website = 'https://github.com/leohan1992/leoutil'//网站，不重要；尽量模拟github上的地址，例如我这样的；当然你有地址最好了
+}
