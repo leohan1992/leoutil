@@ -10,6 +10,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ConnectException;
+import java.security.KeyStore;
+import java.security.SecureRandom;
+import java.security.cert.CertificateFactory;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -29,11 +35,12 @@ import okio.Sink;
  * OKHttp工具类
  */
 public class OKHttpUtils {
-    private static OkHttpClient mOkHttpClient = new OkHttpClient();
-    private static Handler mHandler = new Handler(Looper.getMainLooper());
+    private static OkHttpClient mOkHttpClient ;
+    private static Handler mHandler ;
 
     private OKHttpUtils() {
-
+        mOkHttpClient = new OkHttpClient();
+        mHandler = new Handler(Looper.getMainLooper());
     }
 
     private static OKHttpUtils instance = null;
@@ -49,6 +56,52 @@ public class OKHttpUtils {
         return instance;
     }
 
+    /**
+     * 要在Application中调用，
+     * @param certificates
+     */
+    public  void setCertificates(InputStream... certificates)
+    {
+        try
+        {
+            CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            keyStore.load(null);
+            int index = 0;
+            for (InputStream certificate : certificates)
+            {
+                String certificateAlias = Integer.toString(index++);
+                keyStore.setCertificateEntry(certificateAlias, certificateFactory.generateCertificate(certificate));
+
+                try
+                {
+                    if (certificate != null)
+                        certificate.close();
+                } catch (IOException e)
+                {
+                }
+            }
+
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+
+            TrustManagerFactory trustManagerFactory =
+                    TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+
+            trustManagerFactory.init(keyStore);
+            sslContext.init
+                    (
+                            null,
+                            trustManagerFactory.getTrustManagers(),
+                            new SecureRandom()
+                    );
+            mOkHttpClient =  mOkHttpClient.newBuilder().sslSocketFactory(sslContext.getSocketFactory()).build();
+
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+    }
     /**
      * 普通get方法
      *
@@ -69,7 +122,7 @@ public class OKHttpUtils {
 
             @Override
             public void onResponse(Call call, Response response) {
-                if(response.code()==200) {
+                if (response.code() == 200) {
                     try {
                         String result = response.body().string();
                         sendSuccessResultCallBack(result, listener);
@@ -77,7 +130,7 @@ public class OKHttpUtils {
                         e.printStackTrace();
                         sendFailedResultCallBack(call, e, listener);
                     }
-                }else {
+                } else {
                     sendFailedResultCallBack(call, new Exception("发生错误"), listener);
                 }
             }
@@ -106,7 +159,7 @@ public class OKHttpUtils {
             @Override
             public void onResponse(Call call, Response response) {
 
-                if (response.code()==200) {
+                if (response.code() == 200) {
                     try {
                         String result = response.body().string();
                         sendSuccessResultCallBack(result, listener);
